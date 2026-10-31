@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#faf9f6">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #faf9f6;
+            color: #24241f;
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", sans-serif;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        main { width: 100%; max-width: 520px; }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 750;
+            font-size: 17px;
+            letter-spacing: -0.5px;
+        }
+
+
+        .intro { margin: 54px 0 28px; }
+
+        .eyebrow {
+            color: #77776e;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        h1 {
+            font-size: clamp(38px, 8vw, 56px);
+            line-height: 1.02;
+            letter-spacing: -3px;
+            margin: 14px 0;
+        }
+
+        .intro p {
+            color: #68685f;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .upload-card {
+            background: white;
+            border: 1px solid #deded5;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 12px 40px #29291a08;
+        }
+
+        .dropzone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 190px;
+            padding: 24px;
+            border: 1.5px dashed #b9b9ad;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: #596a24;
+            background: #f8fbeF;
+        }
+
+        .file-icon { font-size: 34px; }
+
+        .dropzone strong { font-size: 15px; }
+
+        .dropzone span {
+            color: #85857b;
+            font-size: 12px;
+        }
+
+        #pdf { display: none; }
+
+        #file-name {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            color: #596a24;
+            font-weight: 650;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 18px;
+            padding: 15px;
+            background: #24241f;
+            color: white;
+            border: 0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .privacy {
+            color: #85857b;
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center;
+            margin: 18px 4px 0;
+        }
+
+        .error {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fff0ed;
+            color: #9b3025;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        footer {
+            margin-top: 30px;
+            color: #929287;
+            font-size: 11px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<main>
+
+    <section class="intro">
+        <h1>𝙼𝚊𝚔𝚎 𝚢𝚘𝚞𝚛 𝙿𝙳𝙵<br>𝚁𝚎𝚊𝚍𝚊𝚋𝚕𝚎 𝚊𝚐𝚊𝚒𝚗</h1>
+        <p>
+            Strange symbols instead of words when you copy text
+            from a PDF?
+        </p>
+    </section>
+
+    <section class="upload-card">
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+            <label class="dropzone" id="dropzone" for="pdf">
+                <strong>Drop your PDF here</strong>
+                <span>or click to browse · PDF only · Max 20 MB</span>
+                <span id="file-name">No file selected</span>
+            </label>
+
+            <input
+                type="file"
+                id="pdf"
+                name="pdf"
+                accept=".pdf,application/pdf"
+                required
+            >
+
+            <button type="submit" id="submit-button" disabled>
+                Decode PDF →
+            </button>
+        </form>
+
+        {% if error %}
+            <div class="error" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <p class="privacy">
+            Files are processed in memory and are not
+            stored by this site.
+        </p>
+    </section>
+</main>
+
+<script>
+    const input = document.getElementById("pdf");
+    const dropzone = document.getElementById("dropzone");
+    const fileName = document.getElementById("file-name");
+    const button = document.getElementById("submit-button");
+    const form = document.getElementById("upload-form");
+
+    function selectFile(file) {
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+            fileName.textContent = "Please choose a PDF file.";
+            button.disabled = true;
+            input.value = "";
+            return;
+        }
+
+        if (file.size > 20 * 1024 * 1024) {
+            fileName.textContent = "File exceeds the 20 MB limit.";
+            button.disabled = true;
+            input.value = "";
+            return;
+        }
+
+        fileName.textContent = file.name;
+        button.disabled = false;
+    }
+
+    input.addEventListener("change", () => {
+        selectFile(input.files[0]);
+    });
+
+    ["dragenter", "dragover"].forEach(eventName => {
+        dropzone.addEventListener(eventName, event => {
+            event.preventDefault();
+            dropzone.classList.add("dragover");
+        });
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+        dropzone.addEventListener(eventName, event => {
+            event.preventDefault();
+            dropzone.classList.remove("dragover");
+        });
+    });
+
+    dropzone.addEventListener("drop", event => {
+        const file = event.dataTransfer.files[0];
+        if (!file) return;
+
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+        selectFile(file);
+    });
+
+    form.addEventListener("submit", () => {
+        button.disabled = true;
+        button.textContent = "Decoding your PDF…";
+    });
+</script>
+</body>
+</html>
